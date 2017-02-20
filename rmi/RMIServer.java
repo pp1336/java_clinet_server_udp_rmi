@@ -4,6 +4,7 @@ package rmi;
 import static common.Utils.concatListInterval;
 
 import java.rmi.RemoteException;
+import java.rmi.NotBoundException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -20,6 +21,7 @@ public class RMIServer extends UnicastRemoteObject
     private int total = -1;
     private short[] receivedMsg;
     private int received = -1;
+    private Registry registry;
 
     public RMIServer(int portNum) throws RemoteException {
         super();
@@ -50,7 +52,9 @@ public class RMIServer extends UnicastRemoteObject
             try {
                 // locate registry
                 Registry registry = LocateRegistry
-                                .createRegistry(server.getPortNum());
+                                .createRegistry(portNum);
+                // save registery
+                server.setRegistry(registry);
                 // bind server object to remote interface
                 registry.rebind("RMIServerInterface", server);
             } catch (RemoteException e) {
@@ -89,9 +93,8 @@ public class RMIServer extends UnicastRemoteObject
 
     }
 
-    // function to show port number used
-    public int getPortNum() {
-        return portNum;
+    public void setRegistry(Registry registry) throws RemoteException {
+        this.registry = registry;
     }
 
     // print summary
@@ -140,6 +143,19 @@ public class RMIServer extends UnicastRemoteObject
         if (duplicateMsg.size() > 0) {
             System.out.println("duplicated messages:");
             System.out.println(concatListInterval(duplicateMsg));
+        }
+
+        // terminate server
+        try {
+            // unbind server object to remote interface
+            registry.unbind("RMIServerInterface");
+            // unexport server
+            UnicastRemoteObject.unexportObject(this, true);
+        } catch (NotBoundException e) {
+            handleError("error unbinding server: remote"
+                        + "object not found", e);
+        } catch (RemoteException e) {
+            handleError("error unbing server", e);
         }
     }
 

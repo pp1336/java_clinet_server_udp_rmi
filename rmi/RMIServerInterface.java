@@ -1,6 +1,7 @@
 package rmi;
 
 import java.rmi.Remote;
+import java.rmi.registry.Registry;
 import java.rmi.RemoteException;
 
 import common.*;
@@ -11,5 +12,6 @@ public interface RMIServerInterface extends Remote {
 	public void receiveMessage(MessageInfo msg)
 	    throws RemoteException;
 
-	public int getPortNum() throws RemoteException;
+        public void setRegistry(Registry registry)
+            throws RemoteException;
 }
